@@ -16,26 +16,41 @@ class Index_controller extends CI_Controller {
 	{
         ini_set('max_execution_time', '0');
         
+        echo "--------------------- RUNNING -------------------";
+        echo "<br>";
+        echo "<br>";
         // $levels = ['provinsi', 'kabupaten', 'kecamatan', 'desa'];
         
         //get province
-        $this->getFromSigBPS('provinsi');
+        // echo "--------------------- GET PROVINCE -------------------";
+        // echo "<br>";
+        // echo "<br>";
+        // $this->getFromSigBPS('provinsi');
 
         //get city of province
-        $provinsi = $this->province->getAll();
-        foreach ($provinsi as $key => $value) {
-            $this->getFromSigBPS('kabupaten', $value->id);
-        }
+        // $provinsi = $this->province->getAll();
+        // foreach ($provinsi as $key => $value) {
+        //     echo "--------------------- GET CITY FROM PROVINCE ". $value->province_name ." -------------------";
+        //     echo "<br>";
+        //     echo "<br>";
+        //     $this->getFromSigBPS('kabupaten', $value->id);
+        // }
 
-        //get district of city
-        $kabupaten = $this->city->getAll();
-        foreach ($kabupaten as $key => $value) {
-            $this->getFromSigBPS('kecamatan', $value->id);
-        }
+        // //get district of city
+        // $kabupaten = $this->city->getAll();
+        // foreach ($kabupaten as $key => $value) {
+        //     echo "--------------------- GET DISTRICT FROM CITY ". $value->city_name ." -------------------";
+        //     echo "<br>";
+        //     echo "<br>";
+        //     $this->getFromSigBPS('kecamatan', $value->id);
+        // }
 
         //get village of district
         $kecamatan = $this->district->getAll();
         foreach ($kecamatan as $key => $value) {
+            echo "--------------------- GET VILLAGE FROM DISTRICT ". $value->district_name ." -------------------";
+            echo "<br>";
+            echo "<br>";
             $this->getFromSigBPS('desa', $value->id);
         }
 
@@ -53,24 +68,6 @@ class Index_controller extends CI_Controller {
         // $this->getFromSigBPS('kecamatan', 7171);
 	}
 
-    function fixJSON($json) {
-        $newJSON = '';
-
-        $jsonLength = strlen($json);
-        for ($i = 0; $i < $jsonLength; $i++) {
-            if ($json[$i] == '"' || $json[$i] == "'") {
-                $nextQuote = strpos($json, $json[$i], $i + 1);
-                $quoteContent = substr($json, $i + 1, $nextQuote - $i - 1);
-                $newJSON .= '"' . str_replace('"', "'", $quoteContent) . '"';
-                $i = $nextQuote;
-            } else {
-                $newJSON .= $json[$i];
-            }
-        }
-
-        return $newJSON;
-    }
-
     function getFromSigBPS($level, $parent = null){
         $failed_count = 0;
         $api_url = "https://sig.bps.go.id/rest-bridging-pos/getwilayah?level=".$level;
@@ -80,8 +77,30 @@ class Index_controller extends CI_Controller {
         }
 
         try {
-            $json = file_get_contents($api_url);
-            $json = json_decode($json);
+            $curl = curl_init(); 
+            curl_setopt($curl, CURLOPT_URL, $api_url);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1); 
+            $output = curl_exec($curl); 
+            $retry = 0;
+
+            //retry if failed
+            if(curl_errno($curl)){
+                echo "ERROR = ".curl_errno($curl);
+                echo "<br>";
+                echo "<br>";
+                echo "<br>";
+            }
+
+            while((curl_errno($curl) == 28 || curl_errno($curl) == 35) && $retry < 3){
+                $response = curl_exec($curl);
+                echo "======================== RETRYING ==================";
+                echo "<br>";
+                $retry++;
+            }
+
+            curl_close($curl); 
+
+            $json = json_decode($output);
     
             if(isset($json) && $json != null){
                 foreach ($json as $key => $value) {
@@ -95,7 +114,7 @@ class Index_controller extends CI_Controller {
                             $province_temp = $this->province->getById($id);
                             if (!$province_temp) {
                                 $this->province->save($id, $name);
-                            } else {
+                            } else if ($name != $province_temp->province_name) {
                                 echo "DUPLICATE PROVINCE ENTRY ID =".$id." ";
                                 echo "<br>";
                                 echo "DUPLICATE PROVINCE ENTRY NAME =".$name." ";
@@ -120,7 +139,7 @@ class Index_controller extends CI_Controller {
                                     echo "<br>";
                                     echo "<br>";
                                 }
-                            } else {
+                            } else if ($name != $city_temp->city_name) {
                                 echo "DUPLICATE CITY ENTRY ID =".$id." ";
                                 echo "<br>";
                                 echo "DUPLICATE CITY ENTRY NAME =".$name." ";
@@ -145,7 +164,7 @@ class Index_controller extends CI_Controller {
                                     echo "<br>";
                                     echo "<br>";
                                 }
-                            } else {
+                            } else if ($name != $district_temp->district_name) {
                                 echo "DUPLICATE district ENTRY ID =".$id." ";
                                 echo "<br>";
                                 echo "DUPLICATE district ENTRY NAME =".$name." ";
@@ -170,7 +189,7 @@ class Index_controller extends CI_Controller {
                                     echo "<br>";
                                     echo "<br>";
                                 }
-                            } else {
+                            } else if ($name != $village_temp->village_name) {
                                 echo "DUPLICATE village ENTRY ID =".$id." ";
                                 echo "<br>";
                                 echo "DUPLICATE village ENTRY NAME =".$name." ";
