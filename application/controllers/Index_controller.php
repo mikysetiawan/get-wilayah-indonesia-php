@@ -73,10 +73,10 @@ class Index_controller extends CI_Controller {
         $count = 0;
 
         //Run this first to get all complete list
-        // $api_url = "https://sig.bps.go.id/rest-bridging/getwilayah?level=".$level;
+        $api_url = "https://sig.bps.go.id/rest-bridging/getwilayah?level=".$level;
 
         //then if you need to get pos, run this to update with pos data
-        $api_url = "https://sig.bps.go.id/rest-bridging-pos/getwilayah?level=".$level;
+        // $api_url = "https://sig.bps.go.id/rest-bridging-pos/getwilayah?level=".$level;
 
         //then run without pos to get more region that doesn't register on pos API
         
