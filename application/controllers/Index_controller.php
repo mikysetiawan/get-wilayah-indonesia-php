@@ -27,32 +27,45 @@ class Index_controller extends CI_Controller {
         // echo "<br>";
         // $this->getFromSigBPS('provinsi');
 
-        //get city of province
+        // $total_city = 0;
+        // //get city of province
         // $provinsi = $this->province->getAll();
         // foreach ($provinsi as $key => $value) {
         //     echo "--------------------- GET CITY FROM PROVINCE ". $value->province_name ." -------------------";
         //     echo "<br>";
         //     echo "<br>";
-        //     $this->getFromSigBPS('kabupaten', $value->id);
+        //     $total_city += $this->getFromSigBPS('kabupaten', $value->id);
         // }
 
+        // echo "TOTAL CITY = ".$total_city;
+        // echo "<br>";
+
+        // $total_district = 0;
         // //get district of city
         // $kabupaten = $this->city->getAll();
         // foreach ($kabupaten as $key => $value) {
         //     echo "--------------------- GET DISTRICT FROM CITY ". $value->city_name ." -------------------";
         //     echo "<br>";
         //     echo "<br>";
-        //     $this->getFromSigBPS('kecamatan', $value->id);
+        //     $total_district += $this->getFromSigBPS('kecamatan', $value->id);
         // }
 
+        // echo "TOTAL DISTRICT = ".$total_district;
+        // echo "<br>";
+
+        $total_village = 0;
         //get village of district
         $kecamatan = $this->district->getAll();
+        // $kecamatan = $this->district->getByIdMoreThan(2171010);
         foreach ($kecamatan as $key => $value) {
             echo "--------------------- GET VILLAGE FROM DISTRICT ". $value->district_name ." -------------------";
             echo "<br>";
             echo "<br>";
-            $this->getFromSigBPS('desa', $value->id);
+            $total_village += $this->getFromSigBPS('desa', $value->id);
         }
+
+        echo "TOTAL VILLAGE = ".$total_village;
+        echo "<br>";
 
 
 
@@ -70,12 +83,23 @@ class Index_controller extends CI_Controller {
 
     function getFromSigBPS($level, $parent = null){
         $failed_count = 0;
-        $api_url = "https://sig.bps.go.id/rest-bridging-pos/getwilayah?level=".$level;
+        $count = 0;
+
+        //Run pos first
+        // $api_url = "https://sig.bps.go.id/rest-bridging-pos/getwilayah?level=".$level;
+
+        //then run without pos to get more region that doesn't register on pos API
+        $api_url = "https://sig.bps.go.id/rest-bridging/getwilayah?level=".$level;
 
         if ($parent) {
             $api_url = $api_url."&parent=".$parent;
         }
 
+        echo "RUNNING URL = ".$api_url;
+        echo "<br>";
+        echo "=======================================================";
+        echo "<br>";
+        echo "<br>";
         try {
             $curl = curl_init(); 
             curl_setopt($curl, CURLOPT_URL, $api_url);
@@ -106,9 +130,18 @@ class Index_controller extends CI_Controller {
                 foreach ($json as $key => $value) {
                     $id = $value->kode_bps;
                     $name = $value->nama_bps;
-                    $postal = $value->kode_pos;
-                    $postal_name = $value->nama_pos;
+                    $postal = null;
+                    $postal_name = null;
 
+                    if (isset($value->kode_pos)) {
+                        $postal = $value->kode_pos;
+                    }
+                    
+                    if (isset($value->nama_pos)) {
+                        $postal_name = $value->nama_pos;
+                    }
+
+                    $count++;
                     switch ($level) {
                         case 'provinsi':
                             $province_temp = $this->province->getById($id);
@@ -217,5 +250,9 @@ class Index_controller extends CI_Controller {
 
             $failed_count++;
         } 
+
+        echo "TOTAL GET DATA = ".$count;
+        echo "<br>";
+        return $count;
     }
 }

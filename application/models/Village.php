@@ -31,8 +31,8 @@ class Village extends CI_Model
         $this->city_id = $city_id;
         $this->district_id = $district_id;
         $this->village_name = $village_name;
-        $this->village_postal_code = $postal;
-        $this->village_postal_name = $postal_name;
+        // $this->village_postal_code = $postal;
+        // $this->village_postal_name = $postal_name;
         $this->db->replace($this->_table, $this);
     }
 

@@ -23,6 +23,16 @@ class District extends CI_Model
         $query = $this->db->get();         
         return $query->row();  
     }
+
+    public function getByIdMoreThan($id)
+    {
+        $this->db->select('*')
+        ->from($this->_table)
+        ->where("id >=", $id);
+
+        $query = $this->db->get();         
+        return $query->result();  
+    }
     
     public function save($id, $province_id, $city_id, $district_name, $postal, $postal_name)
     {
@@ -30,9 +40,9 @@ class District extends CI_Model
         $this->province_id = $province_id;
         $this->city_id = $city_id;
         $this->district_name = $district_name;
-        $this->district_postal_code = $postal;
-        $this->district_postal_name = $postal_name;
-        $this->db->insert($this->_table, $this);
+        // $this->district_postal_code = $postal;
+        // $this->district_postal_name = $postal_name;
+        $this->db->replace($this->_table, $this);
     }
 
     public function update($id, $province_id, $city_id, $district_name, $postal, $postal_name)

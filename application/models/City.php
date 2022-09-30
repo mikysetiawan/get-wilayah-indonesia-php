@@ -29,9 +29,9 @@ class City extends CI_Model
         $this->id = $id;
         $this->province_id = $province_id;
         $this->city_name = $city_name;
-        $this->city_postal_code = $postal;
-        $this->city_postal_name = $postal_name;
-        $this->db->insert($this->_table, $this);
+        // $this->city_postal_code = $postal;
+        // $this->city_postal_name = $postal_name;
+        $this->db->replace($this->_table, $this);
     }
 
     public function update($id, $province_id, $city_name, $postal, $postal_name)
