@@ -40,8 +40,8 @@ class District extends CI_Model
         $this->province_id = $province_id;
         $this->city_id = $city_id;
         $this->district_name = $district_name;
-        // $this->district_postal_code = $postal;
-        // $this->district_postal_name = $postal_name;
+        $this->district_postal_code = $postal;
+        $this->district_postal_name = $postal_name;
         $this->db->replace($this->_table, $this);
     }
 

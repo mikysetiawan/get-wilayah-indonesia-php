@@ -22,36 +22,36 @@ class Index_controller extends CI_Controller {
         // $levels = ['provinsi', 'kabupaten', 'kecamatan', 'desa'];
         
         //get province
-        // echo "--------------------- GET PROVINCE -------------------";
-        // echo "<br>";
-        // echo "<br>";
-        // $this->getFromSigBPS('provinsi');
+        echo "--------------------- GET PROVINCE -------------------";
+        echo "<br>";
+        echo "<br>";
+        $this->getFromSigBPS('provinsi');
 
-        // $total_city = 0;
-        // //get city of province
-        // $provinsi = $this->province->getAll();
-        // foreach ($provinsi as $key => $value) {
-        //     echo "--------------------- GET CITY FROM PROVINCE ". $value->province_name ." -------------------";
-        //     echo "<br>";
-        //     echo "<br>";
-        //     $total_city += $this->getFromSigBPS('kabupaten', $value->id);
-        // }
+        $total_city = 0;
+        //get city of province
+        $provinsi = $this->province->getAll();
+        foreach ($provinsi as $key => $value) {
+            echo "--------------------- GET CITY FROM PROVINCE ". $value->province_name ." -------------------";
+            echo "<br>";
+            echo "<br>";
+            $total_city += $this->getFromSigBPS('kabupaten', $value->id);
+        }
 
-        // echo "TOTAL CITY = ".$total_city;
-        // echo "<br>";
+        echo "TOTAL CITY = ".$total_city;
+        echo "<br>";
 
-        // $total_district = 0;
-        // //get district of city
-        // $kabupaten = $this->city->getAll();
-        // foreach ($kabupaten as $key => $value) {
-        //     echo "--------------------- GET DISTRICT FROM CITY ". $value->city_name ." -------------------";
-        //     echo "<br>";
-        //     echo "<br>";
-        //     $total_district += $this->getFromSigBPS('kecamatan', $value->id);
-        // }
+        $total_district = 0;
+        //get district of city
+        $kabupaten = $this->city->getAll();
+        foreach ($kabupaten as $key => $value) {
+            echo "--------------------- GET DISTRICT FROM CITY ". $value->city_name ." -------------------";
+            echo "<br>";
+            echo "<br>";
+            $total_district += $this->getFromSigBPS('kecamatan', $value->id);
+        }
 
-        // echo "TOTAL DISTRICT = ".$total_district;
-        // echo "<br>";
+        echo "TOTAL DISTRICT = ".$total_district;
+        echo "<br>";
 
         $total_village = 0;
         //get village of district
@@ -66,30 +66,20 @@ class Index_controller extends CI_Controller {
 
         echo "TOTAL VILLAGE = ".$total_village;
         echo "<br>";
-
-
-
-
-
-        /*sometimes its give error file_get_contents(): SSL: An existing connection was forcibly closed by the remote host. 
-        can't load api, 
-        you can run the function again to get manually*/
-
-        //example
-        // $this->getFromSigBPS('desa', 1104023);
-        // $this->getFromSigBPS('kecamatan', 3306);
-        // $this->getFromSigBPS('kecamatan', 7171);
 	}
 
     function getFromSigBPS($level, $parent = null){
         $failed_count = 0;
         $count = 0;
 
-        //Run pos first
-        // $api_url = "https://sig.bps.go.id/rest-bridging-pos/getwilayah?level=".$level;
+        //Run this first to get all complete list
+        // $api_url = "https://sig.bps.go.id/rest-bridging/getwilayah?level=".$level;
+
+        //then if you need to get pos, run this to update with pos data
+        $api_url = "https://sig.bps.go.id/rest-bridging-pos/getwilayah?level=".$level;
 
         //then run without pos to get more region that doesn't register on pos API
-        $api_url = "https://sig.bps.go.id/rest-bridging/getwilayah?level=".$level;
+        
 
         if ($parent) {
             $api_url = $api_url."&parent=".$parent;
@@ -159,75 +149,39 @@ class Index_controller extends CI_Controller {
                             }
                             break;
                         case 'kabupaten':
-                            $city_temp = $this->city->getById($id);
-                            if (!$city_temp) {
-                                $province_temp = $this->province->getById($parent);
-                                if ($province_temp) {
-                                    $this->city->save($id, $province_temp->id, $name, $postal, $postal_name);
-                                } else {
-                                    echo "PROVINCE NOT FOUND ON CITY ID =".$id." ";
-                                    echo "<br>";
-                                    echo "PROVINCE NOT FOUND ON CITY NAME =".$name." ";
-                                    echo "<br>";
-                                    echo "<br>";
-                                    echo "<br>";
-                                }
-                            } else if ($name != $city_temp->city_name) {
-                                echo "DUPLICATE CITY ENTRY ID =".$id." ";
+                            $province_temp = $this->province->getById($parent);
+                            if ($province_temp) {
+                                $this->city->save($id, $province_temp->id, $name, $postal, $postal_name);
+                            } else {
+                                echo "PROVINCE NOT FOUND ON CITY ID =".$id." ";
                                 echo "<br>";
-                                echo "DUPLICATE CITY ENTRY NAME =".$name." ";
-                                echo "<br>";
-                                echo "with =".$city_temp->city_name." ";
+                                echo "PROVINCE NOT FOUND ON CITY NAME =".$name." ";
                                 echo "<br>";
                                 echo "<br>";
                                 echo "<br>";
                             }
                             break;
                         case 'kecamatan':
-                            $district_temp = $this->district->getById($id);
-                            if (!$district_temp) {
-                                $city_temp = $this->city->getById($parent);
-                                if ($city_temp) {
-                                    $this->district->save($id, $city_temp->province_id, $city_temp->id, $name, $postal, $postal_name);
-                                } else {
-                                    echo "city NOT FOUND ON district ID =".$id." ";
-                                    echo "<br>";
-                                    echo "city NOT FOUND ON district NAME =".$name." ";
-                                    echo "<br>";
-                                    echo "<br>";
-                                    echo "<br>";
-                                }
-                            } else if ($name != $district_temp->district_name) {
-                                echo "DUPLICATE district ENTRY ID =".$id." ";
+                            $city_temp = $this->city->getById($parent);
+                            if ($city_temp) {
+                                $this->district->save($id, $city_temp->province_id, $city_temp->id, $name, $postal, $postal_name);
+                            } else {
+                                echo "city NOT FOUND ON district ID =".$id." ";
                                 echo "<br>";
-                                echo "DUPLICATE district ENTRY NAME =".$name." ";
-                                echo "<br>";
-                                echo "with =".$district_temp->district_name." ";
+                                echo "city NOT FOUND ON district NAME =".$name." ";
                                 echo "<br>";
                                 echo "<br>";
                                 echo "<br>";
                             }
                             break;
                         case 'desa':
-                            $village_temp = $this->village->getById($id);
-                            if (!$village_temp) {
-                                $district_temp = $this->district->getById($parent);
-                                if ($district_temp) {
-                                    $this->village->save($id, $district_temp->province_id, $district_temp->city_id, $district_temp->id, $name, $postal, $postal_name);
-                                } else {
-                                    echo "district NOT FOUND ON village ID =".$id." ";
-                                    echo "<br>";
-                                    echo "district NOT FOUND ON village NAME =".$name." ";
-                                    echo "<br>";
-                                    echo "<br>";
-                                    echo "<br>";
-                                }
-                            } else if ($name != $village_temp->village_name) {
-                                echo "DUPLICATE village ENTRY ID =".$id." ";
+                            $district_temp = $this->district->getById($parent);
+                            if ($district_temp) {
+                                $this->village->save($id, $district_temp->province_id, $district_temp->city_id, $district_temp->id, $name, $postal, $postal_name);
+                            } else {
+                                echo "district NOT FOUND ON village ID =".$id." ";
                                 echo "<br>";
-                                echo "DUPLICATE village ENTRY NAME =".$name." ";
-                                echo "<br>";
-                                echo "with =".$village_temp->village_name." ";
+                                echo "district NOT FOUND ON village NAME =".$name." ";
                                 echo "<br>";
                                 echo "<br>";
                                 echo "<br>";
